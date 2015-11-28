@@ -1,0 +1,31 @@
+redis:
+    image: redis
+
+db:
+    image: postgres
+
+sentrycelery: &DEFAULT
+  image: slafs/sentry
+  command: "celery worker -B -l INFO"
+  links:
+    - redis:redis
+    - db:postgresdb
+  environment:
+    SECRET_KEY: '123123123'
+    SENTRY_URL_PREFIX: 'http://dockerhost'
+    SENTRY_SINGLE_ORGANIZATION: 'True'
+    SENTRY_INITIAL_TEAM: 'testteam'
+    SENTRY_INITIAL_PROJECT: 'testproject'
+    SENTRY_INITIAL_KEY: 'pub:sec'
+    SENTRY_INITIAL_PLATFORM: 'java_logback'
+    SENTRY_DOCKER_DO_DB_CHECK: 'yes'
+    CELERY_ALWAYS_EAGER: 'False'
+    CACHE_URL: 'hiredis://redis:6379/2'
+    DATABASE_URL: 'postgres://postgres:@postgresdb/postgres'
+    C_FORCE_ROOT: 'true'
+
+sentryweb:
+  <<: *DEFAULT  # "inherit" from the configuration above
+  command: "start"
+  ports:
+   - "80:9000"
