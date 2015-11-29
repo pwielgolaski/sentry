@@ -3,6 +3,8 @@ redis:
 
 db:
     image: postgres
+    ports:
+      - "5432:5432"
 
 sentrycelery: &DEFAULT
   image: slafs/sentry
@@ -10,10 +12,13 @@ sentrycelery: &DEFAULT
   links:
     - redis:redis
     - db:postgresdb
+  volumes:
+     - ./conf:/config
   environment:
     SECRET_KEY: '123123123'
     SENTRY_URL_PREFIX: 'http://dockerhost'
-    SENTRY_SINGLE_ORGANIZATION: 'True'
+#    SENTRY_SINGLE_ORGANIZATION: 'True'
+    SENTRY_BEACON: 'False'
     SENTRY_INITIAL_TEAM: 'testteam'
     SENTRY_INITIAL_PROJECT: 'testproject'
     SENTRY_INITIAL_KEY: 'pub:sec'
@@ -23,9 +28,23 @@ sentrycelery: &DEFAULT
     CACHE_URL: 'hiredis://redis:6379/2'
     DATABASE_URL: 'postgres://postgres:@postgresdb/postgres'
     C_FORCE_ROOT: 'true'
+    SENTRY_PUBLIC: 'True'
+    SENTRY_USE_REMOTE_USER: 'True'
+    AUTH_REMOTE_USER_HEADER: 'HTTP_X_SSO_USERNAME'
+    PYTHONPATH: '/conf/'
+    SENTRY_CONF_FILE: '/config/sentry_customconf.py'
 
 sentryweb:
   <<: *DEFAULT  # "inherit" from the configuration above
   command: "start"
+  expose:
+   - "9000"
   ports:
-   - "80:9000"
+    - "9000:9000"
+
+nginx:
+  build: .
+  ports:
+    - "80:80"
+  links:
+    - sentryweb:sentryweb
