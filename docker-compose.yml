@@ -10,6 +10,9 @@ sentrycelery: &DEFAULT
   links:
     - redis:redis
     - db:postgresdb
+  volumes:
+    - ./config:/config
+    - ./sentry-auth-generic:/sentry-auth-generic
   environment:
     SECRET_KEY: '123123123'
     SENTRY_URL_PREFIX: 'http://dockerhost'
@@ -23,6 +26,10 @@ sentrycelery: &DEFAULT
     CACHE_URL: 'hiredis://redis:6379/2'
     DATABASE_URL: 'postgres://postgres:@postgresdb/postgres'
     C_FORCE_ROOT: 'true'
+    PYTHONPATH: '/conf/'
+    SENTRY_CONF_FILE: '/config/sentry_customconf.py'
+  extra_hosts:
+    - "oauth:192.168.1.103"
 
 sentryweb:
   <<: *DEFAULT  # "inherit" from the configuration above
